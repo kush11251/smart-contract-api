@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const { ethers } = require("ethers");
 const contractABI = require("./contractABI.json").abi; // Load contract ABI
-const puppeteer = require("puppeteer");
+const pdf = require("html-pdf");
 
 const fs = require('fs');
 const path = require('path');
@@ -87,24 +87,18 @@ async function uploadToPinata(fileContent, fileName) {
 }
 
 async function convertHtmlToPdf(html, fileName) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  return new Promise((resolve, reject) => {
+    const pdfPath = path.join(
+      __dirname,
+      "uploads",
+      fileName.replace(".html", ".pdf")
+    );
 
-  // Set HTML content
-  await page.setContent(html, { waitUntil: "load" });
-
-  // Define PDF file path
-  const pdfPath = path.join(
-    __dirname,
-    "uploads",
-    fileName.replace(".html", ".pdf")
-  );
-
-  // Generate PDF
-  await page.pdf({ path: pdfPath, format: "A4" });
-
-  await browser.close();
-  return pdfPath;
+    pdf.create(html, { format: "A4" }).toFile(pdfPath, (err, res) => {
+      if (err) reject(err);
+      else resolve(res.filename);
+    });
+  });
 }
 
 /**
@@ -135,24 +129,6 @@ app.post("/uploadFile", async (req, res) => {
     ) {
       return res.status(400).json({ error: "Missing file details" });
     }
-
-    // const senderWallet = new ethers.Wallet(senderPrivateKey, provider2);
-    // const senderBalance = await provider2.getBalance(senderWallet.address);
-
-    // if (senderBalance < ethers.parseEther(process.env.REQUIRED_AMOUNT)) {
-    //   return res.status(400).json({ error: "Insufficient balance" });
-    // }
-
-    // const txn = {
-    //   to: RECEIVER_ADDRESS,
-    //   value: ethers.parseEther(process.env.REQUIRED_AMOUNT),
-    //   gasLimit: 21000, // Standard gas limit for ETH transfers
-    //   maxFeePerGas: ethers.parseUnits("10", "gwei"),
-    //   maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
-    // };
-
-    // const txResponse = await senderWallet.sendTransaction(txn);
-    // await txResponse.wait();
 
     console.log({ message: "Transaction successful", txHash: txHash });
 
