@@ -25,6 +25,10 @@ const provider2 = new ethers.JsonRpcProvider(`https://sepolia.infura.io/v3/${INF
 /**
  * ✅ Fetch Contract Data
  */
+app.get("/", (req, res) => {
+    res.status(200).json({message: "App Running"})
+})
+
 app.get("/contract-data", async (req, res) => {
     try {
         const totalFiles = await contract.getAllFiles(); // Example function from contract
