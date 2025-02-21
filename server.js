@@ -3,10 +3,17 @@ const express = require("express");
 const cors = require("cors");
 const { ethers } = require("ethers");
 const contractABI = require("./contractABI.json").abi; // Load contract ABI
+const puppeteer = require("puppeteer");
+
+const fs = require('fs');
+const path = require('path');
 
 const FormData = require("form-data");
 const axios = require("axios");
-const { generateHomeLoanAgreementHTML, generatePersonalLoanAgreementHTML } = require("./loanTemplate");
+const {
+  generateHomeLoanAgreementHTML,
+  generatePersonalLoanAgreementHTML,
+} = require("./loanTemplate");
 
 const app = express();
 app.use(express.json());
@@ -79,6 +86,27 @@ async function uploadToPinata(fileContent, fileName) {
   }
 }
 
+async function convertHtmlToPdf(html, fileName) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  // Set HTML content
+  await page.setContent(html, { waitUntil: "load" });
+
+  // Define PDF file path
+  const pdfPath = path.join(
+    __dirname,
+    "uploads",
+    fileName.replace(".html", ".pdf")
+  );
+
+  // Generate PDF
+  await page.pdf({ path: pdfPath, format: "A4" });
+
+  await browser.close();
+  return pdfPath;
+}
+
 /**
  * ✅ Upload File Metadata to Blockchain
  */
@@ -91,8 +119,10 @@ app.post("/uploadFile", async (req, res) => {
       fileDescription,
       fileData,
       loanType,
-      senderPrivateKey,
+      txHash,
     } = req.body;
+
+    console.log(req.body);
 
     if (
       !fileName ||
@@ -101,47 +131,49 @@ app.post("/uploadFile", async (req, res) => {
       !fileDescription ||
       !fileData ||
       !loanType ||
-      !senderPrivateKey
+      !txHash
     ) {
       return res.status(400).json({ error: "Missing file details" });
     }
 
-    const senderWallet = new ethers.Wallet(senderPrivateKey, provider2);
-    const senderBalance = await provider2.getBalance(senderWallet.address);
+    // const senderWallet = new ethers.Wallet(senderPrivateKey, provider2);
+    // const senderBalance = await provider2.getBalance(senderWallet.address);
 
-    if (senderBalance < ethers.parseEther(process.env.REQUIRED_AMOUNT)) {
-      return res.status(400).json({ error: "Insufficient balance" });
+    // if (senderBalance < ethers.parseEther(process.env.REQUIRED_AMOUNT)) {
+    //   return res.status(400).json({ error: "Insufficient balance" });
+    // }
+
+    // const txn = {
+    //   to: RECEIVER_ADDRESS,
+    //   value: ethers.parseEther(process.env.REQUIRED_AMOUNT),
+    //   gasLimit: 21000, // Standard gas limit for ETH transfers
+    //   maxFeePerGas: ethers.parseUnits("10", "gwei"),
+    //   maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
+    // };
+
+    // const txResponse = await senderWallet.sendTransaction(txn);
+    // await txResponse.wait();
+
+    console.log({ message: "Transaction successful", txHash: txHash });
+
+    var html = "";
+
+    switch (loanType) {
+      case "HL":
+        html = generateHomeLoanAgreementHTML(fileData);
+        break;
+      case "PL":
+        html = generatePersonalLoanAgreementHTML(fileData);
+        break;
     }
 
-    const txn = {
-      to: RECEIVER_ADDRESS,
-      value: ethers.parseEther(process.env.REQUIRED_AMOUNT),
-      gasLimit: 21000, // Standard gas limit for ETH transfers
-      maxFeePerGas: ethers.parseUnits("10", "gwei"),
-      maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),
-    };
+    const pdfPath = await convertHtmlToPdf(html, fileName);
 
-    const txResponse = await senderWallet.sendTransaction(txn);
-    await txResponse.wait();
+    // Read the PDF file
+    const pdfBuffer = fs.readFileSync(pdfPath);
 
-    console.log({ message: "Transaction successful", txHash: txResponse.hash });
-
-    var html = ''
-    
-    switch(loanType){
-        case "HL":
-            html = generateHomeLoanAgreementHTML(fileData)
-            break;
-        case "PL":
-            html = generatePersonalLoanAgreementHTML(fileData)
-            break;
-    }
-
-    // Convert base64 to buffer
-    const fileBuffer = Buffer.from(html);
-
-    // Upload to IPFS
-    const fileHash = await uploadToPinata(fileBuffer, fileName);
+    // Upload PDF to IPFS
+    const fileHash = await uploadToPinata(pdfBuffer, fileName.replace('.html', '.pdf'));
 
     // Store in smart contract
     const tx = await contract.uploadFile(
@@ -152,6 +184,8 @@ app.post("/uploadFile", async (req, res) => {
       fileDescription
     );
     await tx.wait();
+
+    fs.unlinkSync(pdfPath);
 
     res.json({
       message: "File uploaded successfully",
