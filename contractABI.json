@@ -1,99 +1,57 @@
 {
-    "abi": [
+  "abi": [
     {
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
+          "indexed": true,
           "internalType": "string",
-          "name": "fileHash",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "fileName",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "fileType",
-          "type": "string"
-        },
-        {
-          "indexed": false,
-          "internalType": "address",
-          "name": "uploader",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "timestamp",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "fileSize",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "string",
-          "name": "fileDescription",
+          "name": "transactionId",
           "type": "string"
         }
       ],
-      "name": "FileUploaded",
+      "name": "LoanDetailsSaved",
       "type": "event"
     },
     {
-      "inputs": [],
-      "name": "getAllFiles",
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_transactionId",
+          "type": "string"
+        }
+      ],
+      "name": "getLoanDetails",
       "outputs": [
         {
-          "components": [
-            {
-              "internalType": "string",
-              "name": "fileHash",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "fileName",
-              "type": "string"
-            },
-            {
-              "internalType": "string",
-              "name": "fileType",
-              "type": "string"
-            },
-            {
-              "internalType": "address",
-              "name": "uploader",
-              "type": "address"
-            },
-            {
-              "internalType": "uint256",
-              "name": "timestamp",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "fileSize",
-              "type": "uint256"
-            },
-            {
-              "internalType": "string",
-              "name": "fileDescription",
-              "type": "string"
-            }
-          ],
-          "internalType": "struct AdvancedFileStorage.File[]",
-          "name": "",
-          "type": "tuple[]"
+          "internalType": "string",
+          "name": "fullName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "loanAmount",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "loanTenure",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "loanType",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "transactionId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "htmlContent",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -103,42 +61,12 @@
       "inputs": [
         {
           "internalType": "string",
-          "name": "_fileHash",
+          "name": "_transactionId",
           "type": "string"
         }
       ],
-      "name": "getFile",
+      "name": "getLoanHTML",
       "outputs": [
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "",
-          "type": "string"
-        },
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
         {
           "internalType": "string",
           "name": "",
@@ -152,32 +80,38 @@
       "inputs": [
         {
           "internalType": "string",
-          "name": "_fileHash",
+          "name": "_fullName",
           "type": "string"
         },
         {
           "internalType": "string",
-          "name": "_fileName",
+          "name": "_loanAmount",
           "type": "string"
         },
         {
           "internalType": "string",
-          "name": "_fileType",
+          "name": "_loanTenure",
           "type": "string"
         },
         {
-          "internalType": "uint256",
-          "name": "_fileSize",
-          "type": "uint256"
+          "internalType": "string",
+          "name": "_loanType",
+          "type": "string"
         },
         {
           "internalType": "string",
-          "name": "_fileDescription",
+          "name": "_transactionId",
           "type": "string"
         }
       ],
-      "name": "uploadFile",
-      "outputs": [],
+      "name": "setLoanDetails",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "function"
     }

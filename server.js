@@ -5,8 +5,8 @@ const { ethers } = require("ethers");
 const contractABI = require("./contractABI.json").abi; // Load contract ABI
 const pdf = require("html-pdf");
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const FormData = require("form-data");
 const axios = require("axios");
@@ -23,7 +23,7 @@ app.use(cors());
 const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_API_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS,
+  process.env.CONTRACT_ADDRESS2,
   contractABI,
   wallet
 );
@@ -104,6 +104,69 @@ async function convertHtmlToPdf(html, fileName) {
 /**
  * ✅ Upload File Metadata to Blockchain
  */
+app.post("/checkApi", async (req, res) => {
+  try {
+    const { fullName, loanAmount, loanTenure, loanType, transactionId } =
+      req.body;
+
+    console.log(req.body);
+
+    if (
+      !fullName ||
+      !loanAmount ||
+      !loanTenure ||
+      !loanType ||
+      !transactionId
+    ) {
+      return res.status(400).json({ error: "Missing file details" });
+    }
+
+    console.log("Hello");
+    // Store in smart contract
+    const tx = await contract.setLoanDetails(
+      fullName,
+      loanAmount,
+      loanTenure,
+      loanType,
+      transactionId
+    );
+    await tx.wait();
+
+    res.json({
+      message: "File uploaded successfully",
+      transactionHash: tx.hash,
+      transactionId: transactionId,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/getLoanHTML/:transactionId", async (req, res) => {
+  try {
+    const { transactionId } = req.params; // Expect transactionId instead of userAddress
+
+    console.log(`Fetching loan details for transaction: ${transactionId}`);
+    const loanHTML = await contract.getLoanHTML(transactionId);
+
+    if (!loanHTML) {
+      return res.status(404).json({ error: "Loan details not found" });
+    }
+
+    // res.send(loanHTML);
+
+    res.json({
+      message: "File fetched successfully",
+      file: loanHTML
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * ✅ Upload File Metadata to Blockchain
+ */
 app.post("/uploadFile", async (req, res) => {
   try {
     const {
@@ -149,7 +212,10 @@ app.post("/uploadFile", async (req, res) => {
     const pdfBuffer = fs.readFileSync(pdfPath);
 
     // Upload PDF to IPFS
-    const fileHash = await uploadToPinata(pdfBuffer, fileName.replace('.html', '.pdf'));
+    const fileHash = await uploadToPinata(
+      pdfBuffer,
+      fileName.replace(".html", ".pdf")
+    );
 
     // Store in smart contract
     const tx = await contract.uploadFile(
