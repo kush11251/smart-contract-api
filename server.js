@@ -5,8 +5,12 @@ const { ethers } = require("ethers");
 const contractABI = require("./contractABI.json").abi; // Load contract ABI
 const pdf = require("html-pdf");
 
+const { v4: uuidv4 } = require("uuid");
+
 const fs = require("fs");
 const path = require("path");
+
+const sendSignupSuccessEmail = require('./util/mailer')
 
 const FormData = require("form-data");
 const axios = require("axios");
@@ -23,7 +27,7 @@ app.use(cors());
 const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_API_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const contract = new ethers.Contract(
-  process.env.CONTRACT_ADDRESS2,
+  process.env.CONTRACT_ADDRESS3,
   contractABI,
   wallet
 );
@@ -52,6 +56,30 @@ app.get("/contract-data", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch contract data" });
   }
 });
+
+app.post("/sendEmail", async (req, res) => {
+  try {
+    const {email, link, name} = req.body
+
+    console.log(email)
+      console.log(link)
+      console.log(name)
+
+    if(!email || !link || !name) {
+      return res.status(400).json({ error: "Missing required loan details" });
+    }
+
+    await sendSignupSuccessEmail(email, link, name);
+
+    res.json({
+      status: "2001",
+      message: "email sent successfully"
+    })
+  } catch(error) {
+    console.log(error);
+    res.status(500).json({ status: "500",error: error.message });
+  }
+})
 
 async function uploadToPinata(fileContent, fileName) {
   const url = process.env.PINATA_URL;
@@ -106,39 +134,76 @@ async function convertHtmlToPdf(html, fileName) {
  */
 app.post("/checkApi", async (req, res) => {
   try {
-    const { fullName, loanAmount, loanTenure, loanType, transactionId } =
-      req.body;
+    const {
+      firstName,
+      middleName,
+      lastName,
+      dob,
+      pan,
+      gender,
+      pincode,
+      loanType,
+      loanAmount,
+      loanTenure,
+      roi,
+      emiAmount,
+      consentFlag
+    } = req.body;
 
     console.log(req.body);
 
+    // Validate required fields
     if (
-      !fullName ||
+      !firstName ||
+      !lastName ||
+      !dob ||
+      !pan ||
+      !gender ||
+      !pincode ||
+      !loanType ||
       !loanAmount ||
       !loanTenure ||
-      !loanType ||
-      !transactionId
+      !roi ||
+      !emiAmount ||
+      consentFlag === undefined
     ) {
-      return res.status(400).json({ error: "Missing file details" });
+      return res.status(400).json({ error: "Missing required loan details" });
     }
 
-    console.log("Hello");
-    // Store in smart contract
-    const tx = await contract.setLoanDetails(
-      fullName,
+    const transactionId = `${Date.now()}-${uuidv4()}`;
+
+    console.log("Generated Transaction ID:", transactionId);
+    console.log("Sending data to smart contract...");
+
+    // Store loan details in the smart contract
+    const tx = await contract.setLoanDetails([
+      firstName + " " + middleName + " " + lastName,
+      dob,
+      pan,
+      gender,
+      pincode,
+      loanType,
       loanAmount,
       loanTenure,
-      loanType,
-      transactionId
-    );
+      roi,
+      emiAmount,
+      transactionId,
+      "", // HTML content will be generated on-chain
+    ]);
+
     await tx.wait();
 
+    console.log(tx.hash)
+
     res.json({
-      message: "File uploaded successfully",
+      status: "2001",
+      message: "Loan details saved successfully",
       transactionHash: tx.hash,
       transactionId: transactionId,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error:", error);
+    res.status(500).json({ status: "500",error: error.message });
   }
 });
 
@@ -153,11 +218,22 @@ app.get("/getLoanHTML/:transactionId", async (req, res) => {
       return res.status(404).json({ error: "Loan details not found" });
     }
 
+    const pdfPath = await convertHtmlToPdf(loanHTML, transactionId + '.html')
+
+    const pdfBuffer = fs.readFileSync(pdfPath);
+
+    const fileHash = await uploadToPinata(
+      pdfBuffer,
+      transactionId + '.pdf'
+    );
+
     // res.send(loanHTML);
 
     res.json({
+      status: "2001",
       message: "File fetched successfully",
-      file: loanHTML
+      file: loanHTML,
+      fileHash: fileHash
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

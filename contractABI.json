@@ -24,34 +24,71 @@
       "name": "getLoanDetails",
       "outputs": [
         {
-          "internalType": "string",
-          "name": "fullName",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "loanAmount",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "loanTenure",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "loanType",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "transactionId",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "htmlContent",
-          "type": "string"
+          "components": [
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "dob",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "pan",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "gender",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "pincode",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanType",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanAmount",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanTenure",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "roi",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "emiAmount",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "transactionId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "htmlContent",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct LoanContractUpdated.LoanDetails",
+          "name": "",
+          "type": "tuple"
         }
       ],
       "stateMutability": "view",
@@ -79,29 +116,71 @@
     {
       "inputs": [
         {
-          "internalType": "string",
-          "name": "_fullName",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_loanAmount",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_loanTenure",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_loanType",
-          "type": "string"
-        },
-        {
-          "internalType": "string",
-          "name": "_transactionId",
-          "type": "string"
+          "components": [
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "dob",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "pan",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "gender",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "pincode",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanType",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanAmount",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "loanTenure",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "roi",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "emiAmount",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "transactionId",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "htmlContent",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct LoanContractUpdated.LoanDetails",
+          "name": "newLoan",
+          "type": "tuple"
         }
       ],
       "name": "setLoanDetails",
