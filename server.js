@@ -10,7 +10,7 @@ const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
 
-const sendSignupSuccessEmail = require('./util/mailer')
+const sendSignupSuccessEmail = require("./util/mailer");
 
 const FormData = require("form-data");
 const axios = require("axios");
@@ -40,6 +40,15 @@ const provider2 = new ethers.JsonRpcProvider(
   `https://sepolia.infura.io/v3/${INFURA_API_KEY}`
 );
 
+const url = process.env.digilocker_init;
+
+const headers = {
+  accept: "application/json",
+  "content-type": "application/json",
+  client_id: process.env.c_id,
+  client_secret: process.env.c_sec,
+};
+
 /**
  * ✅ Fetch Contract Data
  */
@@ -59,13 +68,13 @@ app.get("/contract-data", async (req, res) => {
 
 app.post("/sendEmail", async (req, res) => {
   try {
-    const {email, link, name} = req.body
+    const { email, link, name } = req.body;
 
-    console.log(email)
-      console.log(link)
-      console.log(name)
+    console.log(email);
+    console.log(link);
+    console.log(name);
 
-    if(!email || !link || !name) {
+    if (!email || !link || !name) {
       return res.status(400).json({ error: "Missing required loan details" });
     }
 
@@ -73,13 +82,13 @@ app.post("/sendEmail", async (req, res) => {
 
     res.json({
       status: "2001",
-      message: "email sent successfully"
-    })
-  } catch(error) {
+      message: "email sent successfully",
+    });
+  } catch (error) {
     console.log(error);
-    res.status(500).json({ status: "500",error: error.message });
+    res.status(500).json({ status: "500", error: error.message });
   }
-})
+});
 
 async function uploadToPinata(fileContent, fileName) {
   const url = process.env.PINATA_URL;
@@ -147,7 +156,7 @@ app.post("/checkApi", async (req, res) => {
       loanTenure,
       roi,
       emiAmount,
-      consentFlag
+      consentFlag,
     } = req.body;
 
     console.log(req.body);
@@ -193,7 +202,7 @@ app.post("/checkApi", async (req, res) => {
 
     await tx.wait();
 
-    console.log(tx.hash)
+    console.log(tx.hash);
 
     res.json({
       status: "2001",
@@ -203,7 +212,7 @@ app.post("/checkApi", async (req, res) => {
     });
   } catch (error) {
     console.error("Error:", error);
-    res.status(500).json({ status: "500",error: error.message });
+    res.status(500).json({ status: "500", error: error.message });
   }
 });
 
@@ -218,14 +227,11 @@ app.get("/getLoanHTML/:transactionId", async (req, res) => {
       return res.status(404).json({ error: "Loan details not found" });
     }
 
-    const pdfPath = await convertHtmlToPdf(loanHTML, transactionId + '.html')
+    const pdfPath = await convertHtmlToPdf(loanHTML, transactionId + ".html");
 
     const pdfBuffer = fs.readFileSync(pdfPath);
 
-    const fileHash = await uploadToPinata(
-      pdfBuffer,
-      transactionId + '.pdf'
-    );
+    const fileHash = await uploadToPinata(pdfBuffer, transactionId + ".pdf");
 
     // res.send(loanHTML);
 
@@ -233,7 +239,7 @@ app.get("/getLoanHTML/:transactionId", async (req, res) => {
       status: "2001",
       message: "File fetched successfully",
       file: loanHTML,
-      fileHash: fileHash
+      fileHash: fileHash,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -339,10 +345,70 @@ app.get("/file/:hash", async (req, res) => {
   }
 });
 
+app.get("/digilocker-session", async (req, res) => {
+  try {
+    console.log("api call");
+    const data = {
+      consent: true,
+      clear_cookies: false,
+      purpose: "development purpose of smart contract",
+      reference_id: Math.random().toString(36).substring(2, 15).toUpperCase(),
+      redirect_url: process.env.digi_return,
+    };
+
+    const response = await axios.post(url, data, { headers });
+    console.log("Response:", response.data);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error(
+      "Error:",
+      error.response ? error.response.data : error.message
+    );
+    res.status(error.response?.status || 500).json({
+      error: error.response ? error.response.data : "Internal Server Error",
+    });
+  }
+});
+
+app.post("/digilocker-data/:sessionid", async (req, res) => {
+  const session_id = req.params.sessionid;
+  try {
+    const DigiDataData = {
+      consent: true,
+      generate_xml: false,
+      generate_pdf: false,
+      purpose: "development purpose of smart contract",
+      reference_id: Math.random().toString(36).substring(2, 12).toUpperCase(),
+    };
+
+    console.log("api call");
+    const response = await axios.post(`https://in.staging.decentro.tech/v2/kyc/sso/digilocker/${session_id}/eaadhaar`, DigiDataData, { headers });
+    console.log("Response:", response.data);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error(
+      "Error:",
+      error.response ? error.response.data : error.message
+    );
+    res.status(error.response?.status || 500).json({
+      error: error.response ? error.response.data : "Internal Server Error",
+    });
+  }
+});
+
+
+
+// API Endpoint
+app.get("/cibil-score", (req, res) => {
+    const cibilScore =  Math.floor(Math.random() * (900 - 700 + 1)) + 700;
+    res.json({ cibilScore });
+});
+
 /**
  * ✅ API Running
  */
+
 const PORT = 5000;
-app.listen(PORT, () =>
-  console.log(`✅ Server running on http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
