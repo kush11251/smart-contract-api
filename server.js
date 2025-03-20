@@ -382,6 +382,9 @@ app.post("/digilocker-data/:sessionid", async (req, res) => {
     };
 
     console.log("api call");
+
+    console.log(session_id)
+
     const response = await axios.post(`https://in.staging.decentro.tech/v2/kyc/sso/digilocker/${session_id}/eaadhaar`, DigiDataData, { headers });
     console.log("Response:", response.data);
     res.status(200).json(response.data);
