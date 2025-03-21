@@ -21,9 +21,6 @@ const {
   generatePersonalLoanAgreementHTML,
 } = require("./loanTemplate");
 
-const app = express();
-app.use(express.json());
-app.use(cors());
 mongoose
   .connect(
     "mongodb+srv://kussagrapathak:jqYSLd2p5tQiMvRU@cluster0.ijhms.mongodb.net/",
@@ -34,6 +31,10 @@ mongoose
   )
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error(err));
+
+const app = express();
+app.use(express.json());
+app.use(cors());
 
 // ✅ Connect to Alchemy & Ethereum
 const provider = new ethers.JsonRpcProvider(process.env.ALCHEMY_API_URL);
